@@ -14,11 +14,17 @@ describe("MSwap", () => {
 
   describe("constructor", () => {
     it("initialises token objects", async () => {
-      //Arrange
       const aTokenAddress = await mSwap.token0();
+      const bTokenAddress = await mSwap.token1();
       assert.equal(aTokenAddress, aToken.address);
+      assert.equal(bTokenAddress, bToken.address);
     });
-    it("initialises reserves at 0", async () => {});
+    it("initialises reserves at 0", async () => {
+      const aReserve = await mSwap.reserves(aToken.address);
+      const bReserve = await mSwap.reserves(bToken.address);
+      assert.equal(aReserve, 0);
+      assert.equal(bReserve, 0);
+    });
   });
   describe("addLiquidity", () => {});
 });
