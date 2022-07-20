@@ -4,6 +4,7 @@ const {
   INITIAL_SUPPLY_ALPHA,
   INITIAL_SUPPLY_BETA,
 } = require("../../../../helper.config");
+const { BigNumber } = require("ethers");
 
 const BURN_ADDRESS = "0xa1Ec01cC32cA30dA1E5BF9fE63bE521d364983ce";
 //TODO: add chain check
@@ -76,6 +77,50 @@ describe("MSwap", () => {
       const reserveBToken = await mSwap.reserves(bToken.address);
       assert.equal(reserveAToken.toString(), "1000");
       assert.equal(reserveBToken.toString(), "1000");
+    });
+  });
+
+  describe("swap", () => {
+    describe("with liquidity", () => {
+      beforeEach(async () => {
+        await aToken.approve(mSwap.address, 250000000);
+        await bToken.approve(mSwap.address, 100000000);
+        await mSwap.addLiquidity(250000000, 100000000);
+      });
+      it("reverts if unknown token address passed", async () => {
+        const unknownAddress = BURN_ADDRESS;
+        await expect(mSwap.swap(1000, unknownAddress)).to.be.revertedWith(
+          "MSwap__AddressHasNoLiquidity"
+        );
+      });
+      it("trasnfers tokens token0 from sender and token1 to sender", async () => {
+        const contractStartingBalanceA = await aToken.balanceOf(mSwap.address);
+        const contractStartingBalanceB = await bToken.balanceOf(mSwap.address);
+        const userStartingBalanceA = await aToken.balanceOf(accounts.deployer);
+        const userStartingBalanceB = await bToken.balanceOf(accounts.deployer);
+
+        await aToken.approve(mSwap.address, 1000);
+        const tx = await mSwap.swap(1000, aToken.address);
+        await tx.wait(1);
+        const contractEndingBalanceA = await aToken.balanceOf(mSwap.address);
+        const contractEndingBalanceB = await bToken.balanceOf(mSwap.address);
+        const userEndingBalanceA = await aToken.balanceOf(accounts.deployer);
+        const userEndingBalanceB = await bToken.balanceOf(accounts.deployer);
+
+        assert.equal(
+          contractStartingBalanceA.add(BigNumber.from(1000)).toString(),
+          contractEndingBalanceA.toString()
+        );
+        assert(userEndingBalanceB.gt(userStartingBalanceB));
+        assert.equal(
+          userStartingBalanceA.sub(userEndingBalanceA).toString(),
+          contractEndingBalanceA.sub(contractStartingBalanceA).toString()
+        );
+        assert.equal(
+          userEndingBalanceB.sub(userStartingBalanceB).toString(),
+          contractStartingBalanceB.sub(contractEndingBalanceB).toString()
+        );
+      });
     });
   });
 });
