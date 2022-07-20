@@ -319,6 +319,9 @@ module.exports = {
     user1: {
       default: 1,
     },
+    feeTaker: {
+      default: 2,
+    },
   },
   etherscan: {
     apiKey: {
