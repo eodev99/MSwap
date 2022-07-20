@@ -56,6 +56,7 @@ contract MSwap is Ownable {
 
     function getAmountOutWithFee(uint256 amountIn, address addressIn)
         public
+        view
         returns (uint256)
     {
         if (reserves[addressIn] == 0) {
@@ -64,10 +65,10 @@ contract MSwap is Ownable {
         address addressOut = addressIn == address(token0)
             ? address(token1)
             : address(token0);
-        uint256 amountInMinusFee = (amountIn * (1000 - feeBasisPoints));
+        uint256 amountInMinusFee = (amountIn * (10000 - feeBasisPoints));
         uint256 numerator = amountInMinusFee * reserves[addressOut];
-        uint256 denominator = (reserves[addressIn] * 1000) + amountInMinusFee;
-        return numerator / denominator;
+        uint256 denominator = (reserves[addressIn] * 10000) + amountInMinusFee;
+        return (numerator / denominator);
     }
 
     function swap(uint256 amountIn, address addressIn) external {
